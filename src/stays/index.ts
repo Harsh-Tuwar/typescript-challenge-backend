@@ -1,5 +1,9 @@
 import express from "express";
 import { Collection, Db, Filter } from 'mongodb';
+import { Filters, Listing } from '../interfaces';
+
+const PER_PAGE: number = 25;
+const FILTER_ITEMS = ['bedrooms', 'beds', 'bathrooms', 'amenities'];
 
 const router = express.Router();
 
@@ -12,8 +16,8 @@ const router = express.Router();
 router.post("/", async (req, res) => {
 	const db: Db = req.app.locals.db;
 	const col: Collection<Document> = db.collection("listingsAndReviews");
-	const { bedrooms, beds, bathrooms, amenities, page = 1 }: Filters = req.body;
-	const perPage = 25;
+	const { bedrooms, beds, bathrooms, amenities }: Filters = req.body;
+	let { page = 1 } = req.body;
 	const filterObject: Filter<Document> = {
 		bedrooms: bedrooms,
 		beds: beds,
@@ -23,16 +27,20 @@ router.post("/", async (req, res) => {
 	
 	// const results = await col.find({}, { limit: 10 });
 	
-	['bedrooms', 'beds', 'bathrooms', 'amenities'].forEach((item) => {
+	FILTER_ITEMS.forEach((item) => {
 		if (!req.body[`${item}`]) {
 			delete filterObject[`${item}`];
 		}
 	});
 
-	const results = await col
+	if (Number(page) < 0) {
+		page = 1;
+	}
+
+	const results: Listing[] = await col
 		.find(filterObject)
-		.skip((perPage * +page) - perPage)
-		.limit(perPage).toArray();
+		.skip((PER_PAGE * +page) - PER_PAGE)
+		.limit(PER_PAGE).toArray();
 
   	res.json(results);
 });
@@ -46,23 +54,21 @@ router.post("/", async (req, res) => {
 router.get('/:pageID', async (req, res) => {
 	const db: Db = req.app.locals.db;
 	const collection: Collection = db.collection("listingsAndReviews");
-	const perPage = 25;
 	const page: number = +req.params.pageID || 1;
 	
-	const payload = await collection
+	const payload: Listing[] = await collection
 		.find({})
-		.skip((perPage * +page) - perPage)
-		.limit(perPage);
+		.skip((PER_PAGE * +page) - PER_PAGE)
+		.limit(PER_PAGE).toArray();
 	
-	res.json(await payload.toArray());
+	res.json(payload);
 });
 
 // @desc Get filtered listings
-// @route GET /stays/filter
+// @route GET /stays/filter/:page
 // @access Public
 router.post('/filter/:page', async (req, res) => {
 	const db: Db = req.app.locals.db;
-	const perPage = 25;
 	const page: number = +req.params.page || 1;
 	const collection: Collection = db.collection("listingsAndReviews");
 	const { bedrooms, beds, bathrooms, amenities }: Filters = req.body;
@@ -73,24 +79,15 @@ router.post('/filter/:page', async (req, res) => {
 		amenities: { $all: amenities }
 	};
 
-	['bedrooms', 'beds', 'bathrooms', 'amenities'].forEach((item) => {
+	FILTER_ITEMS.forEach((item) => {
 		if (!req.body[`${item}`]) {
 			delete filterObject[`${item}`];
 		}
 	});
 
-	const listings = await collection.find(filterObject).skip((perPage * +page) - perPage).limit(perPage);
+	const listings: Listing[]= await collection.find(filterObject).skip((PER_PAGE * +page) - PER_PAGE).limit(PER_PAGE).toArray();
 
-	res.json(await listings.toArray());
+	res.json(listings);
 });
-
-
-interface Filters {
-	bedrooms?: number,
-	beds?: number,
-	bathrooms?: number,
-	amenities?: string[],
-	page?: number,
-}
 
 export default router;

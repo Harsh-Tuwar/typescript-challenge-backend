@@ -27,7 +27,10 @@ connect()
 	.then((db) => {
 		console.info('Mongo connection established!');
 		app.locals.db = db;
-
+	})
+	.catch((err) => console.log('Error connecting Mongo', err))
+	.finally(() => {
+		// DB error
 		// Init all routes :-> I prefer this way as this keeps my index.ts clean but Tyler's way is cool too :)
 		InitRoutes(app); // Using it for Home route that will render README.md file...
 
@@ -38,4 +41,4 @@ connect()
 		app.listen(port, () => {
 			console.info(`server started at http://localhost:${port}`);
 		});
-	}).catch((err) => console.log('Error connecting Mongo', err));
+	});

@@ -1,0 +1,1 @@
+- Would love to add a class structure
