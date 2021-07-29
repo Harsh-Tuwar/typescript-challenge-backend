@@ -1,11 +1,41 @@
+// Dep imports
 import express from "express";
-import Stays from "./stays";
+import dotenv from "dotenv";
+import bodyParser from 'body-parser';
 
-const port = 3000;
+import { connect } from "./db";
+
+// File imports
+import { InitRoutes } from "./routes";
+import Stays from "./stays";
+import Reviews from "./reviews";
+
+// config env
+dotenv.config();
+
+// good to use process.env.PORT as not all servers runs on 3000, for example Heroku uses 5000
+const port = process.env.PORT || 3000;
 const app = express();
 
-app.use("/stays", Stays);
+// body parser
+app.use(bodyParser.urlencoded({ extended: true }));
+// convert req.body in json
+app.use(bodyParser.json());
 
-app.listen(port, () => {
-  console.log(`server started at http://localhost:${port}`);
-});
+// Connect once and store the db instance in app.locals
+connect()
+	.then((db) => {
+		console.info('Mongo connection established!');
+		app.locals.db = db;
+
+		// Init all routes :-> I prefer this way as this keeps my index.ts clean but Tyler's way is cool too :)
+		InitRoutes(app); // Using it for Home route that will render README.md file...
+
+		// Endpoints for Stays and Reviews
+		app.use("/stays", Stays);
+		app.use("/reviews", Reviews);
+
+		app.listen(port, () => {
+			console.info(`server started at http://localhost:${port}`);
+		});
+	}).catch((err) => console.log('Error connecting Mongo', err));
