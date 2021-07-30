@@ -16,7 +16,14 @@ router.post('/', async (req, res) => {
 		});
 	}
 
-	const db: Db = req.app.locals.db;
+	let db: Db;
+
+	if (req.app.locals?.db) {
+		db = req.app.locals.db;
+	} else {
+		return res.status(500).json({ error: 'Coundn\'t connect to the Database' });
+	}
+	
 	const collection: Collection = db.collection("listingsAndReviews");
 
 	const listingData: Listing[] = await collection.find({ "_id": id }).toArray();

@@ -30,7 +30,6 @@ connect()
 	})
 	.catch((err) => console.log('Error connecting Mongo', err))
 	.finally(() => {
-		// DB error
 		// Init all routes :-> I prefer this way as this keeps my index.ts clean but Tyler's way is cool too :)
 		InitRoutes(app); // Using it for Home route that will render README.md file...
 

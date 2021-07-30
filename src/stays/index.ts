@@ -14,7 +14,14 @@ const router = express.Router();
 // @route POST /stays
 // @access Public
 router.post("/", async (req, res) => {
-	const db: Db = req.app.locals.db;
+	let db: Db;
+
+	if (req.app.locals?.db) {
+		db = req.app.locals.db;
+	} else {
+		return res.status(500).json({ error: 'Coundn\'t connect to the Database' });
+	}
+
 	const col: Collection<Document> = db.collection("listingsAndReviews");
 	const { bedrooms, beds, bathrooms, amenities }: Filters = req.body;
 	let { page = 1 } = req.body;
@@ -52,7 +59,14 @@ router.post("/", async (req, res) => {
 // @route GET /stays/:page-number
 // @access Public
 router.get('/:pageID', async (req, res) => {
-	const db: Db = req.app.locals.db;
+	let db: Db;
+
+	if (req.app.locals?.db) {
+		db = req.app.locals.db;
+	} else {
+		return res.status(500).json({ error: 'Coundn\'t connect to the Database' });
+	}
+
 	const collection: Collection = db.collection("listingsAndReviews");
 	const page: number = +req.params.pageID || 1;
 	
@@ -68,7 +82,14 @@ router.get('/:pageID', async (req, res) => {
 // @route GET /stays/filter/:page
 // @access Public
 router.post('/filter/:page', async (req, res) => {
-	const db: Db = req.app.locals.db;
+	let db: Db;
+
+	if (req.app.locals?.db) {
+		db = req.app.locals.db;
+	} else {
+		return res.status(500).json({ error: 'Coundn\'t connect to the Database' });
+	}
+	
 	const page: number = +req.params.page || 1;
 	const collection: Collection = db.collection("listingsAndReviews");
 	const { bedrooms, beds, bathrooms, amenities }: Filters = req.body;
